@@ -1,0 +1,21 @@
+{
+  "brokers": [
+    {
+      "domain_name": "https://www.vaassen.nl",
+      "listings_url": "https://www.vaassen.nl/aanbod?searchon=list&sorts=Flat&transactiontype=Rent",
+      "url_delineator": "?",
+      "url_filter": "a.col-md-4.pand-wrapper.clearfix",
+      "address_filter": "section.container.head h1",
+      "property_filters": {
+        "property_key_filter": "td.kenmerklabel",
+        "property_value_filter": "td.kenmerk"
+      },
+      "property_translations": {
+        "rent": "Huurprijs",
+        "size": "Totale woonoppervlakte",
+        "rooms": "Slaapkamers",
+        "bathrooms": "Badkamers"
+      }
+    }
+  ]
+}
