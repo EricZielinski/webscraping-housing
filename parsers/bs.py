@@ -6,9 +6,19 @@ class BS:
     def __init__(self, page, parser):
         self.parsed_page = BeautifulSoup(page, parser)
 
-    def get_links(self, filter_fields, base_url):
-        offer_links = []
-        for offer in self.parsed_page.find_all(
-                filter_fields["identifier"], filter_fields["identifier_name"]):
-            offer_links.append(f'{base_url}{offer.get("href")}')
-        return offer_links
+    def __get_data(self, bs_filter: str):
+        return self.parsed_page.select(bs_filter)
+
+    def get_urls(self, bs_filter: str, domain_name: str):
+        listing_uris = self.__get_data(bs_filter)
+        return [self.__create_url(uri, domain_name) for uri in listing_uris]
+
+    def __create_url(self, uri: str, domain_name: str):
+        return f'{domain_name}{uri.get("href")}'
+
+    def get_address(self, bs_filter: str):
+        return self.__get_data(bs_filter)[0].contents[0].strip().split(",")
+
+    def get_properties(self, bs_filter: str):
+        properties = self.__get_data(bs_filter)
+        return [prop.text.strip(":") for prop in properties]

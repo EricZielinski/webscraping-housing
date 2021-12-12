@@ -1,30 +1,51 @@
-import requests
-from parsers.html_parser_factory import html_parser_factory
+from scrapers.url import URLScraper
+from scrapers.listing import ListingScraper
 
 
-class BrokerData:
+class BrokerListings:
 
-    def __init__(self, broker):
+    def __init__(self, broker, parser):
         self.broker = broker
-        self.base_url = broker["base_url"]
-        self.all_listings_url = broker["listings_url"]
-        self.all_listings_page = requests.get(self.all_listings_url)
-        self.parser = html_parser_factory("BeautifulSoup", self.all_listings_page.content)
-        self.filter_fields = broker["filter"]
-        self.url_truncator = broker["url_truncator"]
-        self.link_to_each_listing = self.parser.get_links(self.filter_fields, self.base_url)
-        if self.url_truncator is not None:
-            self.truncate_links()
+        url_to_each_listing = URLScraper(broker, parser).get_urls()
+        self.listings = [Listing(broker, parser, url).get_listing() for url in url_to_each_listing]
 
-    def get_links(self):
-        return self.link_to_each_listing
-
-    def truncate_links(self):
-        self.link_to_each_listing = [link.split(self.url_truncator)[0] for link in self.link_to_each_listing]
+    def get_listings(self):
+        return self.listings
 
     def __repr__(self):
         return f'BrokerData({self.broker})'
 
     def __str__(self):
-        return f'{ [link for link in self.link_to_each_listing] }'
+        return f'{ [listing for listing in self.listings] }'
+
+
+class Listing:
+
+    def __init__(self, broker, parser, url):
+        self.property_translations = broker.get("property_translations", None)
+        self.listing = \
+            {
+                'street': None, 'city': None, 'postcode': None, 'rent': None,
+                'availability': None, 'size': None, 'rooms': None,
+                'bathrooms': None, 'shared': False, 'url': url
+            }
+        raw_data = ListingScraper(broker, parser, url).get_listing()
+        self.__populate_listing(raw_data)
+
+    def get_listing(self):
+        return self.listing
+
+    def __populate_listing(self, raw_data):
+        for key in self.property_translations:
+            if self.property_translations[key] in raw_data:
+                self.listing[key] = raw_data[self.property_translations[key]]
+        for key in self.listing:
+            if key in raw_data:
+                self.listing[key] = raw_data[key]
+
+    def __repr__(self):
+        return f'Listing({self.listing["url"]})'
+
+    def __str__(self):
+        return f'{ {key : value for key, value in self.listing.items()} }'
 

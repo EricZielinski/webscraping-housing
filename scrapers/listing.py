@@ -2,46 +2,37 @@ import requests
 from parsers.html_parser_factory import html_parser_factory
 
 
-class Listing:
+class ListingScraper:
+    def __init__(self, broker, parser, listing_url):
+        self.address_filter = broker.get("address_filter", None)
+        self.property_filter = broker.get("property_filters", None)
+        self.parser = parser
+        self.listing_url = listing_url
 
-    def __init__(self, url):
-        self.data = \
-            {
-                'address': None, 'city': None, 'postcode': None, 'rent': None,
-                'availability': None, 'size': None, 'rooms': None,
-                'bathrooms': None, 'shared': False, 'url': url
-            }
+    def get_listing(self):
+        page = requests.get(self.listing_url)
+        listing_page = html_parser_factory(self.parser, page.content)
+        listing = self.__get_props(listing_page)
 
-        self.get_offer_info(url)
+        if self.address_filter is not None:
+            address = self.__get_address(listing_page)
+            listing.update(address)
 
-    def to_dict(self):
-        return self.data
+        return listing
 
-    def __repr__(self):
-        return f'Listing({self.data["url"]})'
+    def __get_address(self, listing_page):
+        address_container = listing_page.get_address(self.address_filter)
+        address = {"street": address_container[0].strip(" "),
+                   "postcode": " ".join(address_container[1].strip(" ").split(" ")[:2]),
+                   "city": address_container[1].strip(" ").split(" ")[-1]
+                   }
 
-    def __str__(self):
-        return f'{ {key : value for key, value in self.data.items()} }'
+        return address
 
-    #refactor
-    def get_offer_info(self, url):
-        page = requests.get(url)
-        parser = html_parser_factory("BeautifulSoup", page.content)
+    def __get_props(self, listing_page):
+        property_keys = listing_page.get_properties(self.property_filter["property_key_filter"])
+        property_values = listing_page.get_properties(self.property_filter["property_value_filter"])
 
-        address_container = parser.find(class_="container head")
-        full_address = address_container.h1.contents[0].strip().split(",")
-        self.data['address'] = full_address[0].strip(" ")
-        self.data['postcode'] = " ".join(full_address[1].strip(" ").split(" ")[:2])
-        self.data['city'] = full_address[1].strip(" ").split(" ")[-1]
+        listing = dict(zip(property_keys, property_values))
 
-        property_translations = {"rent": "Huurprijs", "size": "Totale woonoppervlakte", "rooms": "Slaapkamers", "bathrooms": "Badkamers"}
-
-        properties = [prop.text.strip(":") for prop in parser.find_all(class_="kenmerklabel")]
-        property_values = [value.text for value in parser.find_all(class_="kenmerk")]
-        result = dict(zip(properties, property_values))
-
-        for key in property_translations:
-            if property_translations[key] in result:
-                self.data[key] = result[property_translations[key]]
-
-
+        return listing

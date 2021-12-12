@@ -27,7 +27,7 @@ class MongoDB(DB):
         pass
 
 
-class HousingDataCollection(MongoDB):
+class Collection(MongoDB):
 
     def __init__(self, collection):
         super().__init__()
@@ -59,8 +59,6 @@ class HousingDataCollection(MongoDB):
 
     def create_index(self, data_key):
         self.collection.Collection.create_index(data_key)
-
-    # add count and index
 
 
 

@@ -8,6 +8,6 @@ def html_parser_factory(parser, page):
         if parser == "BeautifulSoup":
             return BS(page, "html.parser")
     else:
-        return ValueError("Unknown parser")
+        raise ValueError("Unknown parser")
 
 
