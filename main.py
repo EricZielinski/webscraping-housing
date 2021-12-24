@@ -1,8 +1,8 @@
 import logging
 import json
 
-from database.crud import Collection
 from scrapers.broker import BrokerListings
+from utilities.config import JSONConfig
 
 #refactor
 if __name__ == '__main__':
@@ -14,6 +14,11 @@ if __name__ == '__main__':
     all_listings_data = []
     with open("brokers.json") as brokers_file:
         brokers = json.load(brokers_file)["brokers"]
+
+        logging.info('Checking broker configuration file')
+        JSONConfig("brokers", brokers).check()
+
+        logging.info('Getting listings data from brokers')
         for i in range(len(brokers)):
             broker = BrokerListings(brokers[i], parser)
             all_listings_data.append(broker.get_listings())
