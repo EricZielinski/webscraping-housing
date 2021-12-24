@@ -3,8 +3,8 @@ from bs4 import BeautifulSoup
 
 class BS:
 
-    def __init__(self, page, parser):
-        self.parsed_page = BeautifulSoup(page, parser)
+    def __init__(self, page):
+        self.parsed_page = BeautifulSoup(page, "html.parser")
 
     def __get_data(self, bs_filter: str):
         return self.parsed_page.select(bs_filter)

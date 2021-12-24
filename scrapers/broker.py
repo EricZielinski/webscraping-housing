@@ -29,13 +29,13 @@ class Listing:
                 'availability': None, 'size': None, 'rooms': None,
                 'bathrooms': None, 'shared': False, 'url': url
             }
-        raw_data = ListingScraper(broker, parser, url).get_listing()
-        self.__populate_listing(raw_data)
+        data_from_listing = ListingScraper(broker, parser, url).get_listing()
+        self.__update_listing_with_relevant(data_from_listing)
 
     def get_listing(self):
         return self.listing
 
-    def __populate_listing(self, raw_data):
+    def __update_listing_with_relevant(self, raw_data):
         for key in self.property_translations:
             if self.property_translations[key] in raw_data:
                 self.listing[key] = raw_data[self.property_translations[key]]
